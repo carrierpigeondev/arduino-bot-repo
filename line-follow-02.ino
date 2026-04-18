@@ -1,0 +1,119 @@
+// apologize in advance for not following a naming
+// convention - also I have no clue why 5,6,7 could
+// not define (arduino ide gave some error and I don't
+// care enough to address it) :P
+
+// pins for the sensors
+int LEFT_PIN = 8;
+int MIDDLE_PIN = 7;
+int RIGHT_PIN = 11;
+
+// pins for the motors and speeds
+#define DPIN_L_MOTOR 4
+#define APIN_L_SPEED 5
+#define DPIN_R_MOTOR 2
+#define APIN_R_SPEED 6
+
+#define APIN_LED 9
+
+int left_value, middle_value, right_value = 0;
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(LEFT_PIN, INPUT);
+  pinMode(MIDDLE_PIN, INPUT);
+  pinMode(RIGHT_PIN, INPUT);
+
+  forwardChange();  // init to forward
+}
+
+void forwardChange() {
+  digitalWrite(DPIN_L_MOTOR, HIGH); digitalWrite(DPIN_R_MOTOR, HIGH);
+}
+void backwardChange() {
+  digitalWrite(DPIN_L_MOTOR, LOW); digitalWrite(DPIN_R_MOTOR, LOW);
+}
+void leftChange() {
+  digitalWrite(DPIN_L_MOTOR, LOW); digitalWrite(DPIN_R_MOTOR, HIGH);
+}
+void leftSpeedChange() {
+  analogWrite(APIN_L_SPEED, 100); analogWrite(APIN_R_SPEED, 140);
+}
+void rightChange() {
+  digitalWrite(DPIN_L_MOTOR, HIGH); digitalWrite(DPIN_R_MOTOR, LOW);
+}
+void rightSpeedChange() {
+  analogWrite(APIN_L_SPEED, 140); analogWrite(APIN_R_SPEED, 100);
+}
+void startMotors() {
+  analogWrite(APIN_L_SPEED, 100); analogWrite(APIN_R_SPEED, 100);
+}
+void stopMotors() {
+  analogWrite(APIN_L_SPEED, 0); analogWrite(APIN_R_SPEED, 0);
+}
+
+void loop() {
+  int delay_length = 30;
+
+  left_value = digitalRead(LEFT_PIN);
+  middle_value = digitalRead(MIDDLE_PIN);
+  right_value = digitalRead(RIGHT_PIN);
+
+  Serial.print(left_value);
+  Serial.print(middle_value);
+  Serial.print(right_value);
+  Serial.println();
+
+  //  1             1               0
+  if (left_value && middle_value && !right_value) { // turn slight right
+    // rightSpeedChange();
+    // forwardChange();
+    rightChange();
+    startMotors();
+  }
+  //  1             0               0
+  if (left_value && !middle_value && !right_value) { // turn sharp right
+    rightChange();
+    startMotors();
+    delay_length = 30;
+  }
+  //  0             1               1
+  if (!left_value && middle_value && right_value) { // turn slight left
+    // leftSpeedChange();
+    // forwardChange();
+    leftChange();
+    startMotors();
+  }
+  //  0             0               1
+  if (!left_value && !middle_value && right_value) { // turn sharp left
+    leftChange();
+    startMotors();
+    delay_length = 30;
+  }
+  // 0              1               0               or 1              1               1
+  if ((!left_value && middle_value && !right_value) || left_value && middle_value && right_value) { // perfect, go straight
+    forwardChange();
+    startMotors();
+  }
+  // 1              0               1 - IMPOSSIBLE
+  // 0              0               0
+  if (!left_value && !middle_value && !right_value) {  // nothing detected, stop
+    stopMotors();
+  }
+  
+
+  // if (middle_value || left_value || right_value) {
+  //   startMotors();
+  //   if (middle_value) {
+  //     forwardChange();
+  //   } else if (left_value) {
+  //     rightSpeedChange();
+  //   } else if (right_value) {
+  //     leftSpeedChange();
+  //   }
+  // } else {
+  //   stopMotors();
+  // }
+
+  delay(delay_length);
+}
